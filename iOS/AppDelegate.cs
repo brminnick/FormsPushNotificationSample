@@ -1,9 +1,12 @@
-﻿using UIKit;
+﻿using System;
+
+using UIKit;
 using Foundation;
+using UserNotifications;
 
 using Microsoft.WindowsAzure.MobileServices;
-using System;
-using UserNotifications;
+
+using Newtonsoft.Json.Linq;
 
 namespace FormsPushNotificationSample.iOS
 {
@@ -16,39 +19,73 @@ namespace FormsPushNotificationSample.iOS
 		{
 			global::Xamarin.Forms.Forms.Init();
 
-			Microsoft.WindowsAzure.MobileServices.CurrentPlatform.Init();
+			CurrentPlatform.Init();
 
 			LoadApplication(new App());
 
+			RegisterForPushNotifications();
+
 			return base.FinishedLaunching(app, options);
+		}
+
+		public override void RegisteredForRemoteNotifications(UIApplication application, NSData deviceToken)
+		{
+			var client = new MobileServiceClient(AzureConstants.AzureAppServiceUrl);
+
+			var push = client.GetPush();
+			push.RegisterAsync(deviceToken);
+		}
+
+		public override void FailedToRegisterForRemoteNotifications(UIApplication application, NSError error)
+		{
+			DisplayAlert("Failed To Register Remote Notifications", error.ToString());
+		}
+
+		public override void DidReceiveRemoteNotification(UIApplication application, NSDictionary userInfo, Action<UIBackgroundFetchResult> completionHandler)
+		{
+			DisplayAlert("Success!", "Push Notification Received");
 		}
 
 		void RegisterForPushNotifications()
 		{
 			if (UIDevice.CurrentDevice.CheckSystemVersion(10, 0))
 			{
-				RegiserForPushNotificationsIOS10();
+				RegiserForPushNotifications_IOS10();
 			}
 			else
 			{
-				RegisterForPushNotificationsIOS9();
+				RegisterForPushNotifications_IOS9();
 			}
 
 		}
 
-		void RegisterForPushNotificationsIOS9()
+		void RegisterForPushNotifications_IOS9()
 		{
 			var settings = UIUserNotificationSettings.GetSettingsForTypes(UIUserNotificationType.Alert | UIUserNotificationType.Badge | UIUserNotificationType.Sound, new NSSet());
-			UIApplication.SharedApplication.RegisterUserNotificationSettings(settings);
-			UIApplication.SharedApplication.RegisterForRemoteNotifications();
+
+			InvokeOnMainThread(() =>
+			{
+				UIApplication.SharedApplication.RegisterUserNotificationSettings(settings);
+				UIApplication.SharedApplication.RegisterForRemoteNotifications();
+			});
 		}
 
-		void RegiserForPushNotificationsIOS10()
+		void RegiserForPushNotifications_IOS10()
 		{
 			UNUserNotificationCenter.Current.RequestAuthorization(UNAuthorizationOptions.Alert, (approved, err) =>
 			{
-				UIApplication.SharedApplication.RegisterForRemoteNotifications();
+				if (approved)
+					InvokeOnMainThread(UIApplication.SharedApplication.RegisterForRemoteNotifications);
 			});
+		}
+
+		void DisplayAlert(string title, string message, Action completionHandler = null)
+		{
+			var alert = UIAlertController.Create(title, message, UIAlertControllerStyle.Alert);
+
+			alert.AddAction(UIAlertAction.Create("Ok", UIAlertActionStyle.Cancel, null));
+
+			ViewControllerHelpers.GetVisibleViewController().PresentViewController(alert, true, completionHandler);
 		}
 	}
 }
