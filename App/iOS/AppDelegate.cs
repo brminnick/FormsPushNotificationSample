@@ -2,12 +2,10 @@
 
 using UIKit;
 using Foundation;
-using UserNotifications;
 
 using Microsoft.WindowsAzure.MobileServices;
 
-using Newtonsoft.Json.Linq;
-using System.Threading.Tasks;
+using FormsPushNotificationSample.Shared;
 
 namespace FormsPushNotificationSample.iOS
 {
@@ -23,14 +21,6 @@ namespace FormsPushNotificationSample.iOS
 			CurrentPlatform.Init();
 
 			LoadApplication(new App());
-
-			if (!IsDeviceRegisteredForRemotePushNotifications())
-				RegisterForPushNotifications();
-
-			if (!AreNotificationsEnabledInSettings())
-			{
-				OpenSettings();
-			}
 
 			return base.FinishedLaunching(app, options);
 		}
@@ -51,36 +41,7 @@ namespace FormsPushNotificationSample.iOS
 		public override void DidReceiveRemoteNotification(UIApplication application, NSDictionary userInfo, Action<UIBackgroundFetchResult> completionHandler)
 		{
 			DisplayAlert("Success!", "Push Notification Received");
-		}
-
-		void RegisterForPushNotifications()
-		{
-			if (UIDevice.CurrentDevice.CheckSystemVersion(10, 0))
-				RegiserForPushNotifications_IOS10();
-			else
-				RegisterForPushNotifications_IOS9();
-
-		}
-
-		void RegisterForPushNotifications_IOS9()
-		{
-			var settings = UIUserNotificationSettings.GetSettingsForTypes(UIUserNotificationType.Alert | UIUserNotificationType.Badge | UIUserNotificationType.Sound, new NSSet());
-
-			InvokeOnMainThread(() =>
-			{
-				UIApplication.SharedApplication.RegisterUserNotificationSettings(settings);
-				UIApplication.SharedApplication.RegisterForRemoteNotifications();
-			});
-		}
-
-		void RegiserForPushNotifications_IOS10()
-		{
-			UNUserNotificationCenter.Current.RequestAuthorization(UNAuthorizationOptions.Alert | UNAuthorizationOptions.Badge | UNAuthorizationOptions.Sound, (approved, err) =>
-			{
-				if (approved)
-					InvokeOnMainThread(UIApplication.SharedApplication.RegisterForRemoteNotifications);
-			});
-		}
+		}	
 
 		void DisplayAlert(string title, string message, Action completionHandler = null)
 		{
@@ -89,23 +50,6 @@ namespace FormsPushNotificationSample.iOS
 			alert.AddAction(UIAlertAction.Create("Ok", UIAlertActionStyle.Cancel, null));
 
 			ViewControllerHelpers.GetVisibleViewController().PresentViewController(alert, true, completionHandler);
-		}
-
-		bool AreNotificationsEnabledInSettings()
-		{
-			var notificationTypes = UIApplication.SharedApplication.CurrentUserNotificationSettings.Types;
-
-			return !notificationTypes.Equals(UIUserNotificationType.None);
-		}
-
-		bool IsDeviceRegisteredForRemotePushNotifications()
-		{
-			return UIApplication.SharedApplication.IsRegisteredForRemoteNotifications;
-		}
-
-		void OpenSettings()
-		{
-			UIApplication.SharedApplication.OpenUrl(new NSUrl(UIApplication.OpenSettingsUrlString));
 		}
 	}
 }

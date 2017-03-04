@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FormsPushNotificationSample
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FormsPushNotificationSample.Droid", "Droid\FormsPushNotificationSample.Droid.csproj", "{EED262EC-794A-4C71-9393-4428CCA75048}"
 EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "FormsPushNotificationSample.Shared", "FormsPushNotificationSample.Shared\FormsPushNotificationSample.Shared.shproj", "{0D0BF812-E52D-4327-8BD6-E12E9D76C63E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

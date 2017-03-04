@@ -1,6 +1,6 @@
-﻿namespace FormsPushNotificationSample
+﻿namespace FormsPushNotificationSample.Shared
 {
-	public static class AzureConstants
+	static class AzureConstants
 	{
 		public const string AzureAppServiceUrl = "http://formspushnotificationsample.azurewebsites.net";
 	}
