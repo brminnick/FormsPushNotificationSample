@@ -14,30 +14,53 @@ namespace FormsPushNotificationSample.iOS
 {
 	public class PushNotificationServices_iOS : IPushNotificationServices
 	{
-		public bool AreNotificationsEnabledInSettings()
+		public Task<bool> AreNotificationsEnabledInSettings()
 		{
-			if (UIDevice.CurrentDevice.CheckSystemVersion(10, 0))
-				return AreNotificationsEnabledInSettings_iOS10();
-			
-			return AreNotificationsEnabledInSettings_iOS9();
+			var tcs = new TaskCompletionSource<bool>();
+
+			UIApplication.SharedApplication.InvokeOnMainThread(() =>
+			{
+				if (UIDevice.CurrentDevice.CheckSystemVersion(10, 0))
+					tcs.SetResult(AreNotificationsEnabledInSettings_iOS10());
+				else
+					tcs.SetResult(AreNotificationsEnabledInSettings_iOS9());
+			});
+
+			return tcs.Task;
 		}
 
-		public bool IsDeviceRegisteredForRemotePushNotifications()
+		public Task<bool> IsDeviceRegisteredForRemotePushNotifications()
 		{
-			return UIApplication.SharedApplication.IsRegisteredForRemoteNotifications;
+			var tcs = new TaskCompletionSource<bool>();
+
+			UIApplication.SharedApplication.InvokeOnMainThread(() =>
+			{
+				tcs.SetResult(UIApplication.SharedApplication.IsRegisteredForRemoteNotifications);
+			});
+
+			return tcs.Task;
 		}
 
 		public void OpenPushNotificationSettings()
 		{
-			UIApplication.SharedApplication.OpenUrl(new NSUrl(UIApplication.OpenSettingsUrlString));
+			UIApplication.SharedApplication.InvokeOnMainThread(() =>
+			{
+				if (UIDevice.CurrentDevice.CheckSystemVersion(10, 0))
+					OpenPushNotificationSettings_iOS10();
+				else
+					OpenPushNotificationSettings_iOS9();
+			});
 		}
 
 		public void RegisterDeviceForPushNotifications()
 		{
-			if (UIDevice.CurrentDevice.CheckSystemVersion(10, 0))
-				RegiserForPushNotifications_IOS10();
-			else
-				RegisterForPushNotifications_IOS9();
+			UIApplication.SharedApplication.InvokeOnMainThread(() =>
+			{
+				if (UIDevice.CurrentDevice.CheckSystemVersion(10, 0))
+					RegiserForPushNotifications_iOS10();
+				else
+					RegisterForPushNotifications_iOS9();
+			});
 		}
 
 		public void RequestPushNotification()
@@ -45,7 +68,12 @@ namespace FormsPushNotificationSample.iOS
 			throw new NotImplementedException();
 		}
 
-		void RegisterForPushNotifications_IOS9()
+		public void ClearBadgeNotifications()
+		{
+			UIApplication.SharedApplication.ApplicationIconBadgeNumber = 0;
+		}
+
+		void RegisterForPushNotifications_iOS9()
 		{
 			var settings = UIUserNotificationSettings.GetSettingsForTypes(UIUserNotificationType.Alert | UIUserNotificationType.Badge | UIUserNotificationType.Sound, new NSSet());
 
@@ -53,12 +81,14 @@ namespace FormsPushNotificationSample.iOS
 			UIApplication.SharedApplication.RegisterForRemoteNotifications();
 		}
 
-		void RegiserForPushNotifications_IOS10()
+		void RegiserForPushNotifications_iOS10()
 		{
-			UNUserNotificationCenter.Current.RequestAuthorization(UNAuthorizationOptions.Alert | UNAuthorizationOptions.Badge | UNAuthorizationOptions.Sound, (approved, err) =>
+			UNUserNotificationCenter.Current.RequestAuthorization(UNAuthorizationOptions.Alert | UNAuthorizationOptions.Badge | UNAuthorizationOptions.Sound, async (approved, err) =>
 			{
-				if (approved)
-					UIApplication.SharedApplication.RegisterForRemoteNotifications();
+				var isDeviceRegisteredForPushNotifications = await DependencyService.Get<IPushNotificationServices>().IsDeviceRegisteredForRemotePushNotifications();
+
+				if (approved && !isDeviceRegisteredForPushNotifications)
+					UIApplication.SharedApplication.InvokeOnMainThread(UIApplication.SharedApplication.RegisterForRemoteNotifications);
 			});
 		}
 
@@ -84,6 +114,21 @@ namespace FormsPushNotificationSample.iOS
 			});
 
 			return tcs.Task.Result;
+		}
+
+		void OpenPushNotificationSettings_iOS9()
+		{
+			UIApplication.SharedApplication.OpenUrl(new NSUrl(UIApplication.OpenSettingsUrlString));
+		}
+
+		void OpenPushNotificationSettings_iOS10()
+		{
+			var options = new UIApplicationOpenUrlOptions
+			{
+				SourceApplication = "com.minnick.formspushnotificationsample"
+			};
+
+			UIApplication.SharedApplication.OpenUrl(new NSUrl(UIApplication.OpenSettingsUrlString), options, null);
 		}
 	}
 }

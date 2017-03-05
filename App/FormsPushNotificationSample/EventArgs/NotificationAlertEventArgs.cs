@@ -1,11 +1,11 @@
 ﻿using System;
 namespace FormsPushNotificationSample
 {
-	public class PushNotificationAlertEventArgs : EventArgs
+	public class NotificationAlertEventArgs : EventArgs
 	{
 		readonly string _titleText, _messageText, _cancelText, _acceptText;
 
-		public PushNotificationAlertEventArgs(string titleText, string messageText, string cancelText, string acceptText)
+		public NotificationAlertEventArgs(string titleText, string messageText, string cancelText, string acceptText)
 		{
 			_titleText = titleText;
 			_messageText = messageText;
@@ -13,7 +13,7 @@ namespace FormsPushNotificationSample
 			_acceptText = acceptText;
 		}
 
-		public PushNotificationAlertEventArgs(string titleText, string messageText, string cancelText)
+		public NotificationAlertEventArgs(string titleText, string messageText, string cancelText)
 		{
 			_titleText = titleText;
 			_messageText = messageText;

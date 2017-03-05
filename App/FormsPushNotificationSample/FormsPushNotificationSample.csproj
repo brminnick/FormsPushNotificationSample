@@ -34,7 +34,8 @@
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="ViewModels\BaseViewModel.cs" />
     <Compile Include="Services\IPushNotificationServices.cs" />
-    <Compile Include="EventArgs\PushNotificationAlertEventArgs.cs" />
+    <Compile Include="EventArgs\NotificationAlertEventArgs.cs" />
+    <Compile Include="Pages\BasePage.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System.Net.Http">
