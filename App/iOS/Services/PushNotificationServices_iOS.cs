@@ -18,10 +18,10 @@ namespace FormsPushNotificationSample.iOS
 		{
 			var tcs = new TaskCompletionSource<bool>();
 
-			UIApplication.SharedApplication.InvokeOnMainThread(() =>
+			UIApplication.SharedApplication.InvokeOnMainThread(async () =>
 			{
 				if (UIDevice.CurrentDevice.CheckSystemVersion(10, 0))
-					tcs.SetResult(AreNotificationsEnabledInSettings_iOS10());
+					tcs.SetResult(await AreNotificationsEnabledInSettings_iOS10());
 				else
 					tcs.SetResult(AreNotificationsEnabledInSettings_iOS9());
 			});
@@ -99,7 +99,7 @@ namespace FormsPushNotificationSample.iOS
 			return !notificationTypes.Equals(UIUserNotificationType.None);
 		}
 
-		bool AreNotificationsEnabledInSettings_iOS10()
+		Task<bool> AreNotificationsEnabledInSettings_iOS10()
 		{
 			var tcs = new TaskCompletionSource<bool>();
 
@@ -113,7 +113,7 @@ namespace FormsPushNotificationSample.iOS
 				tcs.SetResult(areNotificationsEnabledInSettings);
 			});
 
-			return tcs.Task.Result;
+			return tcs.Task;
 		}
 
 		void OpenPushNotificationSettings_iOS9()
